@@ -1,7 +1,7 @@
 import pygame
 import sys
+import os
 import random
-
 
 pygame.init() #Initialize Pygame
 defaultFont = pygame.font.get_default_font()
@@ -53,50 +53,63 @@ def checkFalling():
 def checkCollision():
     global score
     global scoreUP
-    if player.isJumping == False:
-        for rect in platList:
-            if player.clipline((rect.topleft), (rect.topright)):
-                player.update(player.left, rect.top - 48, 50, 50 )
-                player.isJumping = False
-                player.isFalling = False
-                player.changeY = 0
-                if scoreUP == True:
-                    score += 1
-                    scoreUP = False
-                break
-            elif player.top < 825:
-                player.isFalling = True
-    if player.isFalling == True and player.top > 1000:
-        global canJump
-        screen.fill((255,255,255))
-        player.top = 1010
-        canJump = False
-        gameOverFont = pygame.font.Font(defaultFont, 125)
-        gameOverText = gameOverFont.render('GAME OVER', True, (255, 0, 0))
-        screen.blit(gameOverText, (110,425))
 
-        scoreOverFont = pygame.font.Font(defaultFont, 75)
-        gameOverScore = scoreOverFont.render("Score: " + str(score), True, (255,0,0))
-        screen.blit(gameOverScore, (350, 575))
+    if player.isJumping == True: return 0
+
+    for rect in platList:
+        if player.clipline((rect.topleft), (rect.topright)):
+            player.update(player.left, rect.top - 48, 50, 50 )
+            player.isJumping = False
+            player.isFalling = False
+            player.changeY = 0
+            if scoreUP == True:
+                score += 1
+                scoreUP = False
+            break
+        elif player.top < 825:
+            player.isFalling = True
 
 def checkScroll():
-    if player.isFalling == False and player.top <= 200:
-        for plat in platList:
-            plat.update(plat.left, plat.top + player.changeY, plat.width, plat.height)
-            if plat.top > 1000:
-                platList.remove(plat)
-            
+    if player.top > 300: return 0
+    
+    for plat in platList:
+        plat.update(plat.left, plat.top + player.changeY, plat.width, plat.height)
+        if plat.top > 1000:
+            platList.remove(plat)
+    
+def endGame():
+    global canJump
+
+    platList.clear()
+
+    screen.fill((255,255,255))
+    gameOverFont = pygame.font.Font(defaultFont, 125)
+    gameOverText = gameOverFont.render('GAME OVER', True, (255, 0, 0))
+    screen.blit(gameOverText, (110,425))
+    scoreOverFont = pygame.font.Font(defaultFont, 75)
+    gameOverScore = scoreOverFont.render("Score: " + str(score), True, (255,0,0))
+    screen.blit(gameOverScore, (350, 575))
+
+    player.top = 1010
+    canJump = False
+
 
 """Initialization of all needed objects"""
+running = True
+
 player = Player(475, 825, 50, 50)
 platList = []
+
 jumpHeight = 15
 canJump = True
+
 score = 0
 scoreUP = True
 
+jumpSound = pygame.mixer.Sound(os.path.join('sound', 'jumpSound.wav'))
+
 """MAIN GAME LOOP"""
-while True:
+while running:
     #Background color
     screen.fill((255,255,255))
     showScore = scoreFont.render(str(score), True, (125,125,125))
@@ -125,6 +138,7 @@ while True:
                 player.changeY = jumpHeight
                 canJump = False
                 scoreUP = True
+                pygame.mixer.Sound.play(jumpSound)
         else:
             pass
 
@@ -137,12 +151,11 @@ while True:
     elif pressed[pygame.K_a]: player.left = 0
 
 
-
     #Draw player
     pygame.draw.rect(screen, (0,0,0), (pygame.Rect(player.getCoords(), (50,50))))
 
     #Limit max platforms to 20
-    while len(platList) < 11:
+    while len(platList) < 20:
         newPlatform()
     
     #Draw all platforms
@@ -154,6 +167,9 @@ while True:
     checkJump()
     checkFalling()
     checkScroll()
+
+    if player.isFalling == True and player.top > 1000:
+        endGame()
 
     #Framerate
     pygame.time.Clock().tick(144)
