@@ -53,6 +53,7 @@ def checkFalling():
 def checkCollision():
     global score
     global scoreUP
+    global setFall
 
     if player.isJumping == True: return 0
 
@@ -66,7 +67,7 @@ def checkCollision():
                 score += 1
                 scoreUP = False
             break
-        elif player.top < 825:
+        elif player.top < setFall:
             player.isFalling = True
 
 def checkScroll():
@@ -102,6 +103,7 @@ platList = []
 
 jumpHeight = 15
 canJump = True
+setFall = 825
 
 score = 0
 scoreUP = True
@@ -138,6 +140,7 @@ while running:
                 player.changeY = jumpHeight
                 canJump = False
                 scoreUP = True
+                setFall = 1000
                 pygame.mixer.Sound.play(jumpSound)
         else:
             pass
