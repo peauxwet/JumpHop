@@ -3,179 +3,192 @@ import sys
 import os
 import random
 
-pygame.init() #Initialize Pygame
-defaultFont = pygame.font.get_default_font()
-scoreFont = pygame.font.Font(defaultFont, 40)
+pygame.init()  # Initialize Pygame
+default_font = pygame.font.get_default_font()
+score_font = pygame.font.Font(default_font, 40)
 
-WIN_SIZE = 1000 #Window height and width
-screen = pygame.display.set_mode((WIN_SIZE, WIN_SIZE))#Create a window
-pygame.display.set_caption('Doodle Hop') #Set title of game on window
-""" windowIcon = pygame.image.load("/home/noah/Documents/Python/Projects/Doodle Hop/img/doodleHopIcon.jpg") #Load icon from file
+WIN_SIZE = 1000  # Window height and width
+screen = pygame.display.set_mode((WIN_SIZE, WIN_SIZE))  # Create a window
+pygame.display.set_caption('Doodle Hop')  # Set title of game on window
+"""windowIcon = pygame.image.load("/PATH TO WINDOW ICON HERE") #Load icon 
 pygame.display.set_icon(windowIcon) #Set loaded icon as window icon """
 
-"""Player Class holds coordinates, size, and velocity of the player."""
+
+# Player Class holds coordinates, size, and velocity of the player.
 class Player(pygame.Rect):
     def __init__(self, left, top, width, height):
-        super().__init__(left,top,width,height)
+        super().__init__(left, top, width, height)
 
-        self.isJumping = False
-        self.isFalling = False
-        self.changeY = 0
-    
-    def getCoords(self):
-        return (self.left, self.top)
+        self.is_jumping = False
+        self.is_falling = False
+        self.change_y = 0
+
+    def get_coords(self):
+        return self.left, self.top
 
 
-"""Spawn a new platform. If there are no arguments, spawn them anywhere. If there is a tuple arguement, use first value as range for new platform and second value as number of platforms to spawn."""
-def newPlatform():
-    if len(platList) == 0:
-        newPlat = pygame.Rect(random.randint(0, WIN_SIZE-50), random.randint(795, 812), 55, 13)
-        platList.append(newPlat)
+# Spawn a new platform. If there are no arguments, spawn them anywhere. If there is a tuple argument,
+# use first value as range for new platform and second value as number of platforms to spawn.
+def new_platform():
+    if len(plat_list) == 0:
+        new_plat = pygame.Rect(random.randint(0, WIN_SIZE - 50), random.randint(795, 812), 55, 13)
+        plat_list.append(new_plat)
     else:
-        newPlat = pygame.Rect(random.randint(0, WIN_SIZE-50), random.randint(platList[-1].top - 150, platList[-1].top-40), 55, 13)
-        platList.append(newPlat)
+        new_plat = pygame.Rect(random.randint(0, WIN_SIZE - 50),
+                               random.randint(plat_list[-1].top - 150, plat_list[-1].top - 40), 55, 13)
+        plat_list.append(new_plat)
 
 
-def checkJump():
-    if player.isJumping == True:
-        if player.changeY > 0:
-            player.top -= player.changeY
-            player.changeY -= .4
-        elif player.changeY <= 0:
-            player.isJumping = False
-            player.isFalling = True
-    
-def checkFalling():
-    if player.isFalling == True:
-            player.top += player.changeY
-            player.changeY += .5
+def check_jump():
+    if player.is_jumping:
+        if player.change_y > 0:
+            player.top -= player.change_y
+            player.change_y -= .4
+        elif player.change_y <= 0:
+            player.is_jumping = False
+            player.is_falling = True
 
-def checkCollision():
+
+def check_falling():
+    if player.is_falling:
+        player.top += player.change_y
+        player.change_y += .5
+
+
+def check_collision():
     global score
-    global scoreUP
-    global setFall
+    global score_up
+    global set_fall
 
-    if player.isJumping == True: return 0
+    if player.is_jumping:
+        return 0
 
-    for rect in platList:
-        if player.clipline((rect.topleft), (rect.topright)):
-            player.update(player.left, rect.top - 48, 50, 50 )
-            player.isJumping = False
-            player.isFalling = False
-            player.changeY = 0
-            if scoreUP == True:
+    for rect in plat_list:
+        if player.clipline(rect.topleft, rect.topright):
+            player.update(player.left, rect.top - 48, 50, 50)
+            player.is_jumping = False
+            player.is_falling = False
+            player.change_y = 0
+            if score_up:
                 score += 1
-                scoreUP = False
+                score_up = False
             break
-        elif player.top < setFall:
-            player.isFalling = True
+        elif player.top < set_fall:
+            player.is_falling = True
 
-def checkScroll():
-    if player.top > 300: return 0
-    
-    for plat in platList:
-        plat.update(plat.left, plat.top + player.changeY, plat.width, plat.height)
-        if plat.top > 1000:
-            platList.remove(plat)
-    
-def endGame():
-    global canJump
 
-    platList.clear()
+def check_scroll():
+    if player.top > 300:
+        return 0
+    for current_plat in plat_list:
+        current_plat.update(current_plat.left, current_plat.top + player.change_y, current_plat.width,
+                            current_plat.height)
+        if current_plat.top > 1000:
+            plat_list.remove(current_plat)
 
-    screen.fill((255,255,255))
-    gameOverFont = pygame.font.Font(defaultFont, 125)
-    gameOverText = gameOverFont.render('GAME OVER', True, (255, 0, 0))
-    screen.blit(gameOverText, (110,425))
-    scoreOverFont = pygame.font.Font(defaultFont, 75)
-    gameOverScore = scoreOverFont.render("Score: " + str(score), True, (255,0,0))
-    screen.blit(gameOverScore, (350, 575))
+
+def end_game():
+    global can_jump
+
+    plat_list.clear()
+
+    screen.fill((255, 255, 255))
+    game_over_font = pygame.font.Font(default_font, 125)
+    game_over_text = game_over_font.render('GAME OVER', True, (255, 0, 0))
+    screen.blit(game_over_text, (110, 425))
+    score_over_font = pygame.font.Font(default_font, 75)
+    game_over_score = score_over_font.render("Score: " + str(score), True, (255, 0, 0))
+    screen.blit(game_over_score, (350, 575))
 
     player.top = 1010
-    canJump = False
+    can_jump = False
 
 
 """Initialization of all needed objects"""
 running = True
 
 player = Player(475, 825, 50, 50)
-platList = []
+plat_list = []
 
-jumpHeight = 15
-canJump = True
-setFall = 825
+jump_height = 15
+can_jump = True
+set_fall = 825
 
 score = 0
-scoreUP = True
+score_up = True
 
-jumpSound = pygame.mixer.Sound(os.path.join('sound', 'jumpSound.wav'))
+jump_sound = pygame.mixer.Sound(os.path.join('sound', 'jumpSound.wav'))
 
 """MAIN GAME LOOP"""
 while running:
-    #Background color
-    screen.fill((255,255,255))
-    showScore = scoreFont.render(str(score), True, (125,125,125))
-    screen.blit(showScore, (25,25))
+    # Background color
+    screen.fill((255, 255, 255))
+    show_score = score_font.render(str(score), True, (125, 125, 125))
+    screen.blit(show_score, (25, 25))
 
     for event in pygame.event.get():
-        #Close game
-        if event.type == pygame.QUIT: sys.exit()
+        # Close game
+        if event.type == pygame.QUIT:
+            sys.exit()
 
-        #Jump Reset
+        # Jump Reset
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
-                canJump = True
+                can_jump = True
 
-    #Gets all keys pressed. Used to iterate through and find specific key presses.
+    # Gets all keys pressed. Used to iterate through and find specific key presses.
     pressed = pygame.key.get_pressed()
 
-    #Start Jump
+    # Start Jump
     if pressed[pygame.K_SPACE]:
-        if canJump == True:
-            if player.isJumping == True or player.isFalling == True:
+        if can_jump:
+            if player.is_jumping or player.is_falling:
                 pass
             else:
-                player.isJumping = True
-                player.isFalling = False
-                player.changeY = jumpHeight
-                canJump = False
-                scoreUP = True
-                setFall = 1000
-                pygame.mixer.Sound.play(jumpSound)
+                player.is_jumping = True
+                player.is_falling = False
+                player.change_y = jump_height
+                can_jump = False
+                score_up = True
+                set_fall = 1000
+                pygame.mixer.Sound.play(jump_sound)
         else:
             pass
 
-    #Player move right
-    if pressed[pygame.K_d] and player.left <= WIN_SIZE-55: player.left += 5
-    elif pressed[pygame.K_d]: player.left = WIN_SIZE-50
+    # Player move right
+    if pressed[pygame.K_d] and player.left <= WIN_SIZE - 55:
+        player.left += 5
+    elif pressed[pygame.K_d]:
+        player.left = WIN_SIZE - 50
 
-    #Player move left
-    if pressed[pygame.K_a] and player.left >= 10: player.left -= 5
-    elif pressed[pygame.K_a]: player.left = 0
+    # Player move left
+    if pressed[pygame.K_a] and player.left >= 10:
+        player.left -= 5
+    elif pressed[pygame.K_a]:
+        player.left = 0
 
+    # Draw player
+    pygame.draw.rect(screen, (0, 0, 0), (pygame.Rect(player.get_coords(), (50, 50))))
 
-    #Draw player
-    pygame.draw.rect(screen, (0,0,0), (pygame.Rect(player.getCoords(), (50,50))))
+    # Limit max platforms to 20
+    while len(plat_list) < 20:
+        new_platform()
 
-    #Limit max platforms to 20
-    while len(platList) < 20:
-        newPlatform()
-    
-    #Draw all platforms
-    for plat in platList:
-        pygame.draw.rect(screen, (0,0,0), (plat))
+    # Draw all platforms
+    for plat in plat_list:
+        pygame.draw.rect(screen, (0, 0, 0), plat)
 
-    #Do all checks for current game state
-    checkCollision()
-    checkJump()
-    checkFalling()
-    checkScroll()
+    # Do all checks for current game state
+    check_collision()
+    check_jump()
+    check_falling()
+    check_scroll()
 
-    if player.isFalling == True and player.top > 1000:
-        endGame()
+    if player.is_falling and player.top > 1000:
+        end_game()
 
-    #Framerate
+    # Frame-rate
     pygame.time.Clock().tick(144)
 
-    #update the current drawing of the screen
+    # update the current drawing of the screen
     pygame.display.update()
