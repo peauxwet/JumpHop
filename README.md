@@ -1,4 +1,4 @@
 # JumpHop
-Simple re-creation of a popular game. I'll let you guess.
+Simple re-creation of a popular game. 
 
-This is my first game in python. I'd love feedback.
+EDIT: I wrote this code a while back and DEFINITELY need to go back and refactor. I'm sorry to anyone who had to see this.
